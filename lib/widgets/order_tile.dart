@@ -1,7 +1,15 @@
 import 'package:admin_vstore/widgets/order_header.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class OrderTile extends StatelessWidget {
+
+  final DocumentSnapshot order;
+  OrderTile(this.order);
+  final states = [
+    '', 'Em Preparação', 'Em Transporte', 'Aguardando Entrega', 'Entregue'
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -11,10 +19,14 @@ class OrderTile extends StatelessWidget {
       ),
       child: Card(
         child: ExpansionTile(
+          key: Key(order.documentID),
+          initiallyExpanded: order.data['status'] != 4,
           title: Text(
-            "#123456 - Entregue",
+            '#${order.documentID.substring(order.documentID.length - 7, 
+            order.documentID.length)} - ${states[order.data['status']]}',
             style: TextStyle(
-              color: Colors.green,
+              color: order.data['status'] == 1 ? Colors.purple : order.data['status'] == 2 ? 
+              Colors.orange : order.data['status'] == 3 ? Colors.blue : Colors.green,
             ),
           ),
           children: [
@@ -26,36 +38,45 @@ class OrderTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  OrderHeader(),
+                  OrderHeader(order),
                   Column(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ListTile(
-                        title: Text("Camiseta Preta P"),
-                        subtitle: Text("camiseta puro algodão e 100% lavável"),
-                        trailing: Text("2",
+                    children: order.data['products'].map<Widget>((p){
+                      return ListTile(
+                        title: Text(p['product']['title'] + ' - ' + p['size']),
+                        subtitle: Text(p['category'] + ' - ' + p['pid']),
+                        trailing: Text(
+                          p['quantity'].toString(),
                           style: TextStyle(fontSize: 20),
                         ),
-                      ),
-                    ],
+                      );
+                    }).toList(),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       FlatButton(
-                        onPressed: (){}, 
+                        onPressed: (){
+                          Firestore.instance.collection('users').document(order['clientId'])
+                            .collection('orders').document(order.documentID).delete();
+                          order.reference.delete();
+                        }, 
                         textColor: Colors.red,
-                        child: Text("Excluir"),
+                        child: Text('Excluir'),
                       ),
                       FlatButton(
-                        onPressed: (){}, 
+                        onPressed: order.data['status'] > 1 ? () {
+                          order.reference.updateData({'status': order.data['status'] - 1});
+                        } : null, 
                         textColor: Colors.grey[850],
-                        child: Text("Voltar"),
+                        child: Text('Voltar'),
                       ),
                       FlatButton(
-                        onPressed: (){}, 
+                        onPressed: order.data['status'] < 4 ? () {
+                          order.reference.updateData({'status': order.data['status'] + 1});
+                        } : null, 
                         textColor: Colors.green,
-                        child: Text("Avançar"),
+                        child: Text('Avançar'),
                       ),
                     ],
                   ),
