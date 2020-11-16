@@ -3,6 +3,7 @@ import 'package:admin_vstore/blocs/user_bloc.dart';
 import 'package:admin_vstore/tabs/orders_tab.dart';
 import 'package:admin_vstore/tabs/products_tab.dart';
 import 'package:admin_vstore/tabs/users_tab.dart';
+import 'package:admin_vstore/widgets/edit_category_dialog.dart';
 import 'package:bloc_pattern/bloc_pattern.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -130,6 +131,17 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             ),
           ],
+        );
+      case 2:
+        return FloatingActionButton(
+          child: Icon(Icons.add),
+          backgroundColor: Colors.pinkAccent,
+          onPressed: (){
+            showDialog(
+              context: context,
+              builder: (context) => EditCategoryDialog(),
+            );
+          }
         );
     }
   }
